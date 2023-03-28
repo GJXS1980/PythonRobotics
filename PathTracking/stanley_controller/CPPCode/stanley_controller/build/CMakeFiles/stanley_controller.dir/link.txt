@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/stanley_controller.dir/test/main.cpp.o  -o stanley_controller  /usr/lib/x86_64-linux-gnu/libpython3.8.so 

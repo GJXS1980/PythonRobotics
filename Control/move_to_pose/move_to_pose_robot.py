@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 """
 
 Move to specified pose (with Robot class)
@@ -13,7 +16,7 @@ P.I. Corke, "Robotics, Vision & Control", Springer 2017, ISBN 978-3-319-54413-7
 import matplotlib.pyplot as plt
 import numpy as np
 import copy
-from move_to_pose import PathFinderController
+from move_to_pose_test import PathFinderController
 
 # Simulation parameters
 TIME_DURATION = 1000
@@ -62,9 +65,11 @@ class Robot:
                  path_finder_controller):
         self.name = name
         self.color = color
-        self.MAX_LINEAR_SPEED = max_linear_speed
-        self.MAX_ANGULAR_SPEED = max_angular_speed
+        self.MAX_LINEAR_SPEED = max_linear_speed    #   最大线速度
+        self.MAX_ANGULAR_SPEED = max_angular_speed  #   最大角速度
         self.path_finder_controller = path_finder_controller
+
+        # 参数初始化
         self.x_traj = []
         self.y_traj = []
         self.pose = Pose(0, 0, 0)
@@ -99,26 +104,34 @@ class Robot:
         self.x_traj.append(self.pose.x)
         self.y_traj.append(self.pose.y)
 
+        #   求解控制速度，返回斜边rho, 线速度v, 角速度w
         rho, linear_velocity, angular_velocity = \
             self.path_finder_controller.calc_control_command(
                 self.pose_target.x - self.pose.x,
                 self.pose_target.y - self.pose.y,
                 self.pose.theta, self.pose_target.theta)
 
+        print(rho, linear_velocity, angular_velocity)
+        #   判断是否到达目标点
         if rho < AT_TARGET_ACCEPTANCE_THRESHOLD:
             self.is_at_target = True
 
+        #   限制最大线速度
         if abs(linear_velocity) > self.MAX_LINEAR_SPEED:
             linear_velocity = (np.sign(linear_velocity)
                                * self.MAX_LINEAR_SPEED)
 
+        #   限制最大角速度
         if abs(angular_velocity) > self.MAX_ANGULAR_SPEED:
             angular_velocity = (np.sign(angular_velocity)
                                 * self.MAX_ANGULAR_SPEED)
 
+        #   求解当前角度
         self.pose.theta = self.pose.theta + angular_velocity * dt
+        #   当前x方向位移
         self.pose.x = self.pose.x + linear_velocity * \
             np.cos(self.pose.theta) * dt
+        #    当前y方向位移
         self.pose.y = self.pose.y + linear_velocity * \
             np.sin(self.pose.theta) * dt
 
@@ -213,24 +226,26 @@ def transformation_matrix(x, y, theta):
 
 
 def main():
-    pose_target = Pose(15, 15, -1)
+    pose_target = Pose(15, 16, 0)  #   目标位姿
 
-    pose_start_1 = Pose(5, 2, 0)
-    pose_start_2 = Pose(5, 2, 0)
-    pose_start_3 = Pose(5, 2, 0)
+    pose_start_1 = Pose(5, 2, 0)    #   开始目标点1
+    pose_start_2 = Pose(5, 2, 0)    #   开始目标点2
+    pose_start_3 = Pose(5, 2, 0)    #   开始目标点3
+    # print(pose_start_1.theta)
 
-    controller_1 = PathFinderController(5, 8, 2)
-    controller_2 = PathFinderController(5, 16, 4)
-    controller_3 = PathFinderController(10, 25, 6)
+    controller_1 = PathFinderController(5, 10, 2)    #   路径规划1
+    controller_2 = PathFinderController(10, 30, 1)   #   路径规划2
+    controller_3 = PathFinderController(10, 25, 6)  #   路径规划3
 
-    robot_1 = Robot("Yellow Robot", "y", 12, 5, controller_1)
+    robot_1 = Robot("Yellow Robot", "y", 12, 5, controller_1)   #   机器人
     robot_2 = Robot("Black Robot", "k", 16, 5, controller_2)
     robot_3 = Robot("Blue Robot", "b", 20, 5, controller_3)
 
-    robot_1.set_start_target_poses(pose_start_1, pose_target)
+    robot_1.set_start_target_poses(pose_start_1, pose_target)   # 机器人控制
     robot_2.set_start_target_poses(pose_start_2, pose_target)
     robot_3.set_start_target_poses(pose_start_3, pose_target)
 
+    # robots: list[Robot] = [robot_1, robot_2, robot_3]
     robots: list[Robot] = [robot_1, robot_2, robot_3]
 
     run_simulation(robots)

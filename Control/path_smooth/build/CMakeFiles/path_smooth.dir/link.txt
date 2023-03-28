@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/path_smooth.dir/main.cc.o  -o path_smooth  /usr/lib/x86_64-linux-gnu/libpython3.8.so 
