@@ -57,7 +57,7 @@ class State:
         # 存在障碍物时，距离无穷大
         if self.state == "#" or state.state == "#":
             return maxsize  
-        #   采用欧几里得距离计算代价
+
         return math.sqrt(math.pow((self.x - state.x), 2) + math.pow((self.y - state.y), 2))
 
     def set_state(self, state):
@@ -96,7 +96,7 @@ class Map:
 
     def get_neighbors(self, state):
         """
-        获取8邻域(x, y) --> (-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)
+        获取8邻域
         """        
         state_list = []
         for i in [-1, 0, 1]:
@@ -128,12 +128,7 @@ class Dstar:
 
     def process_state(self):
         """
-        D*算法的主要过程,GoalState(用G表示),b(X)=Y表示X的父辈为Y
-        h(X):代价函数估计,表示当前State到G的开销估计
-        c(X,Y):表示X与Y之间的路径开销
-        b(X)=Y表示X的父辈为Y
-        K(X):Key Function,该值是优先队列Openlist中的排序依据,K值最小的State位于队列头
-        k_old:表示所有位于Openlist上的state的最小K值
+        D*算法的主要过程
         """  
         x = self.min_state()    #   获取open list列表中最小k的节点
 
@@ -143,46 +138,29 @@ class Dstar:
         k_old = self.get_kmin() #   获取open list列表中最小k节点的k值
         self.remove(x)  #   从openlist中移除
 
-        # 判断openlist中,k_old < h(X),状态为Raise(用来传递路径开销的增加，可能父节点突变为墙的子节点)
+        # 判断openlist中
         if k_old < x.h:
             for y in self.map.get_neighbors(x):
-                #   k_old <= h(X) and h(X) > h(Y) + c(Y, X)
                 if y.h <= k_old and x.h > y.h + x.cost(y):
-                    #   就修改x的父节点,重置其h的值
-                    # b(X) = Y
                     x.parent = y
-                    #   h(X) = h(Y) + c(Y, X)
                     x.h = y.h + x.cost(y)
-        #   k_old = h(X),状态为 Lower(用来传递路径开销的减少，并没有受到障碍影响)
         elif k_old == x.h:
             for y in self.map.get_neighbors(x):
-                #   t(Y) = NEW or (b(Y) = X and h(Y) != h(X) + c(X, Y)
-                #   or (b(Y) != X and h(Y) > h(X) + c(X, Y)
                 if y.t == "new" or y.parent == x and y.h != x.h + x.cost(y) \
                         or y.parent != x and y.h > x.h + x.cost(y):
-                    #  b(Y) = X 
                     y.parent = x
-                    # (Y, h(X) + c(X, Y))
                     self.insert(y, x.h + x.cost(y))
         else:
             for y in self.map.get_neighbors(x):
-                #   b(Y) = NEW or (b(Y) = X and h(Y) != h(X) + c(X, Y))
                 if y.t == "new" or y.parent == x and y.h != x.h + x.cost(y):
-                    #  b(Y) = X 
                     y.parent = x
-                    # (Y, h(X) + c(X, Y))
                     self.insert(y, x.h + x.cost(y))
                 else:
-                    # b(Y) != X and h(Y) > h(X) + c(X, Y)
                     if y.parent != x and y.h > x.h + x.cost(y):
-                        # X, h(X)
                         self.insert(y, x.h)
                     else:
-                        # b(Y) != X and h(X) > h(Y) + c(X, Y)
-                        # and t(Y) = CLOSED and h(Y) > k_old
                         if y.parent != x and x.h > y.h + x.cost(y) \
                                 and y.t == "close" and y.h > k_old:
-                            # Y, h(Y)
                             self.insert(y, y.h)
         return self.get_kmin()
 
@@ -205,43 +183,32 @@ class Dstar:
         return k_min
 
     def insert(self, state, h_new):
-        """
-        将节点添加到open列表,有 New、Open、Closed三种状态:
-        New表示该State从未被置于Openlist中,Open表示该State正位于OpenList中,
-        Closed表示已不再位于Openlist中
-        """
-        #   新节点
         if state.t == "new":
             state.k = h_new
-        #   在open列表中的节点状态
         elif state.t == "open":
             state.k = min(state.k, h_new)
-        #   在closed列表中的节点状态    
         elif state.t == "close":
             state.k = min(state.h, h_new)
-        
         state.h = h_new
         state.t = "open"
         self.open_list.add(state)
 
     def remove(self, state):
-        """
-        将节点从open列表移除
-        """
         if state.t == "open":
             state.t = "close"
         self.open_list.remove(state)
 
     def modify_cost(self, x):
         """
-        以一个openlist,通过parent递推整条路径上的cost
+        以一个openlist，通过parent递推整条路径上的cost
         """
         if x.t == "close":
             self.insert(x, x.parent.h + x.cost(x.parent))
 
     def run(self, start, end):
-        #   初始化路径列表rx和ry
-        rx, ry = [], []
+
+        rx = []
+        ry = []
 
         self.insert(end, 0.0)
 
@@ -283,9 +250,7 @@ class Dstar:
                 break
 
 def main():
-    #   初始化map大小
     m = Map(100, 100)
-    #   设定障碍物点的位置
     ox, oy = [], []
     for i in range(-10, 60):
         ox.append(i)
@@ -328,31 +293,33 @@ def main():
         ox.append(30)
         oy.append(i)
 
-    #   将ox和oy对象中对应的元素打包成一个个元组(ox, oy),返回由这些元组组成的列表
+
+    # print([(i, j) for i, j in zip(ox, oy)])
+    # print("ox:", ox)
+    # print("oy:", oy)
+
     m.set_obstacle([(i, j) for i, j in zip(ox, oy)])
 
-    #   设置起始点和终点
     start = [10, 10]
     goal = [50, 50]
-
-    #   绘制网格图(包含起始点、终点和障碍物)
     if show_animation:
         plt.plot(ox, oy, ".k")
         plt.plot(start[0], start[1], "og")
         plt.plot(goal[0], goal[1], "xb")
         plt.axis("equal")
-
-    #   起始点和终点在地图的位置及状态
+        plt.pause(3)
+    
     start = m.map[start[0]][start[1]]
     end = m.map[goal[0]][goal[1]]
+    print(start.x, start.y, start.parent, start.state, start.t, start.h, start.k)
+    print(end.x, end.y, end.parent, end.state, end.t, end.h, end.k)
 
     dstar = Dstar(m)
     rx, ry = dstar.run(start, end)
 
-    #   绘制规划路径
-    if show_animation:
-        plt.plot(rx, ry, "-r")
-        plt.show()
+    # if show_animation:
+    #     plt.plot(rx, ry, "-r")
+    #     plt.show()
 
 
 if __name__ == '__main__':
