@@ -3,11 +3,9 @@
 
 """
 
-Depth-First grid planning
+Bidirectional-Depth-First grid planning
 
-author: Erwin Lejeune (@spida_rwin)
-
-See Wikipedia article (https://en.wikipedia.org/wiki/Depth-first_search)
+author: GrantLi
 
 """
 
@@ -18,7 +16,7 @@ import matplotlib.pyplot as plt
 show_animation = True
 
 
-class DepthFirstSearchPlanner:
+class BidirectionalDepthFirstSearchPlanner:
 
     def __init__(self, ox, oy, reso, rr):
         """
@@ -69,50 +67,103 @@ class DepthFirstSearchPlanner:
         nstart = self.Node(self.calc_xyindex(sx, self.minx), self.calc_xyindex(sy, self.miny), 0.0, -1, None)
         ngoal = self.Node(self.calc_xyindex(gx, self.minx), self.calc_xyindex(gy, self.miny), 0.0, -1, None)
 
-        open_set, closed_set = dict(), dict()
-        open_set[self.calc_grid_index(nstart)] = nstart
+        open_set_A, closed_set_A = dict(), dict()
+        open_set_B, closed_set_B = dict(), dict()
+
+        open_set_A[self.calc_grid_index(nstart)] = nstart
+        open_set_B[self.calc_grid_index(ngoal)] = ngoal
 
         while True:
-            if len(open_set) == 0:
+            if len(open_set_A) == 0:
                 print("Open set is empty..")
                 break
+            if len(open_set_B) == 0:
+                print("Open set is empty..")
+                break
+
+
             #   取最后一个索引(索引为 -1),并弹出对应的键值对
-            current = open_set.pop(list(open_set.keys())[-1])
-            c_id = self.calc_grid_index(current)
+            current_A = open_set_A.pop(list(open_set_A.keys())[-1])
+            current_B = open_set_B.pop(list(open_set_B.keys())[-1])
+
+            c_id_A = self.calc_grid_index(current_A)
+            c_id_B = self.calc_grid_index(current_B)
+
+            closed_set_A[c_id_A] = current_A
+            closed_set_B[c_id_B] = current_B
 
             # show graph
             if show_animation:  # pragma: no cover
-                plt.plot(self.calc_grid_position(current.x, self.minx),
-                         self.calc_grid_position(current.y, self.miny), "xc")
+                plt.plot(self.calc_grid_position(current_A.x, self.minx),
+                         self.calc_grid_position(current_A.y, self.miny), "xc")
+                plt.plot(self.calc_grid_position(current_B.x, self.minx),
+                         self.calc_grid_position(current_B.y, self.miny), "xc")                         
                 # for stopping simulation with the esc key.
                 plt.gcf().canvas.mpl_connect('key_release_event', lambda event:
                                              [exit(0) if event.key == 'escape'
                                               else None])
                 plt.pause(0.00001)
 
-            if current.x == ngoal.x and current.y == ngoal.y:
+            if c_id_A in closed_set_B:
                 print("Find goal")
-                ngoal.parent_index = current.parent_index
-                ngoal.cost = current.cost
+                meet_point_A = closed_set_A[c_id_A]
+                meet_point_B = closed_set_B[c_id_A]
                 break
-
+            if c_id_B in closed_set_A:
+                print("Find goal")
+                meet_point_A = closed_set_A[c_id_B]
+                meet_point_B = closed_set_B[c_id_B]
+                break
             # expand_grid search grid based on motion model(将运动模型变成索引序列)
             for i, _ in enumerate(self.motion):
-                node = self.Node(current.x + self.motion[i][0],
-                                 current.y + self.motion[i][1],
-                                 current.cost + self.motion[i][2], c_id, None)
-                n_id = self.calc_grid_index(node)
+                breakA = False
+                breakB = False
+
+                node_A = self.Node(current_A.x + self.motion[i][0],
+                                 current_A.y + self.motion[i][1],
+                                 current_A.cost + self.motion[i][2], c_id_A, None)
+
+                node_B = self.Node(current_B.x + self.motion[i][0],
+                                 current_B.y + self.motion[i][1],
+                                 current_B.cost + self.motion[i][2], c_id_B, None)
+
+                n_id_A = self.calc_grid_index(node_A)
+                n_id_B = self.calc_grid_index(node_B)
 
                 # If the node is not safe, do nothing
-                if not self.verify_node(node):
-                    continue
+                if not self.verify_node(node_A):
+                    breakA = True
 
-                if n_id not in closed_set:
-                    open_set[n_id] = node
-                    closed_set[n_id] = node
-                    node.parent = current
+                if not self.verify_node(node_B):
+                    breakB = True
 
-        rx, ry = self.calc_final_path(ngoal, closed_set)
+                if (n_id_A not in closed_set_A) and (n_id_A not in open_set_A) and (not breakA):
+                    open_set_A[n_id_A] = node_A
+                    closed_set_A[n_id_A] = node_A
+                    node_A.parent = current_A
+
+                if (n_id_B not in closed_set_B) and (n_id_B not in open_set_B) and (not breakB):
+                    open_set_B[n_id_B] = node_B
+                    closed_set_B[n_id_B] = node_B
+                    node_B.parent = current_B
+
+
+                # if n_id not in closed_set:
+                #     open_set[n_id] = node
+                #     closed_set[n_id] = node
+                #     node.parent = current
+
+        # rx, ry = self.calc_final_path(ngoal, closed_set)
+
+        rxA, ryA = self.calc_final_path(meet_point_A, closed_set_A)
+        rxB, ryB = self.calc_final_path(meet_point_B, closed_set_B)
+        #   列表倒序
+        rxA.reverse()
+        ryA.reverse()
+
+        rx = rxA + rxB
+        ry = ryA + ryB
+
         return rx, ry
 
     def calc_final_path(self, ngoal, closedset):
@@ -290,7 +341,7 @@ def main():
         plt.grid(True)
         plt.axis("equal")
 
-    dfs = DepthFirstSearchPlanner(ox, oy, grid_size, robot_radius)
+    dfs = BidirectionalDepthFirstSearchPlanner(ox, oy, grid_size, robot_radius)
     rx, ry = dfs.planning(sx, sy, gx, gy)
 
     if show_animation:  # pragma: no cover

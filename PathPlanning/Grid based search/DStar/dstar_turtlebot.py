@@ -9,27 +9,27 @@ author: Nirnay Roy
 
 D*算法是一种基于局部改变的路径搜索算法，主要用于解决动态环境下的路径规划问题。
 
-D算法的核心思想是基于A算法，即在已知的网格地图中，使用启发式搜索找到一条最优路径，
-但与A不同的是，D算法在搜索过程中可以对路径进行局部修改，以适应动态环境的变化。
-具体来说，D算法将搜索空间看作一个图，每个节点表示地图上的一个位置，每条边表示两个位置之间的连接。
-D算法通过在图中修改代价函数，从而使路径在动态环境下得到更新。具体来说，
+D算法的核心思想是基于A算法,即在已知的网格地图中,使用启发式搜索找到一条最优路径,
+但与A不同的是,D算法在搜索过程中可以对路径进行局部修改,以适应动态环境的变化。
+具体来说,D*算法将搜索空间看作一个图,每个节点表示地图上的一个位置，每条边表示两个位置之间的连接。
+D*算法通过在图中修改代价函数,从而使路径在动态环境下得到更新。具体来说,
 代价函数表示从当前节点到目标节点的最小代价，而随着环境变化，节点之间的距离和代价也会发生变化。
-因此，D*算法需要在环境变化时，对代价函数进行更新，并重新搜索路径。
+因此,D*算法需要在环境变化时，对代价函数进行更新，并重新搜索路径。
 
 D*算法的主要步骤如下：
 
-初始化：设定起点和目标点，将所有节点的代价函数设为无穷大，将起点的代价设为0，将起点加入open list中。
+初始化:设定起点和目标点,将所有节点的代价函数设为无穷大,将起点的代价设为0,将起点加入open list中。
 
-迭代搜索：在open list中找到代价函数最小的节点作为当前节点。如果当前节点不是目标节点，
+迭代搜索:在open list中找到代价函数最小的节点作为当前节点。如果当前节点不是目标节点,
 则对当前节点的相邻节点进行更新。对于每个相邻节点，计算出从当前节点到该节点的代价，
 如果该代价小于该节点当前的代价，则更新该节点的代价，并将该节点的父节点设为当前节点。
-如果该节点不在open list中，则将其加入open list中。如果该节点已经在open list中，
-则更新其代价和父节点，并重新排序open list。
+如果该节点不在open list中,则将其加入open list中。如果该节点已经在open list中,
+则更新其代价和父节点,并重新排序open list。
 
 环境变化：如果环境发生了变化，则重新计算节点之间的代价，并根据代价函数的变化重新搜索路径。
 
-D算法可以通过对代价函数的选择来实现不同的搜索策略。例如，可以选择使用欧几里得距离作为代价函数，
-以获得更优的路径。此外，D算法还可以通过添加启发式函数来进一步优化路径搜索的效率。
+D*算法可以通过对代价函数的选择来实现不同的搜索策略。例如,可以选择使用欧几里得距离作为代价函数,
+以获得更优的路径。此外,D*算法还可以通过添加启发式函数来进一步优化路径搜索的效率。
 
 
 See Wikipedia article (https://en.wikipedia.org/wiki/D*)
@@ -63,11 +63,11 @@ class State:
 
     def set_state(self, state):
         """
-        .: new
-        #: obstacle
-        e: oparent of current state
-        *: closed state
-        s: current state
+        .: new(新状态)
+        #: obstacle(障碍物)
+        e: oparent of current state(当前状态的父级)
+        *: closed state(关闭状态)
+        s: current state(当前状态)
         """
         if state not in ["s", ".", "#", "e", "*"]:
             return
@@ -244,17 +244,29 @@ def main():
     for i in range(0, 40):
         ox.append(40)
         oy.append(60 - i)
-    # for i in range(30, 40):
-    #     ox.append(i)
-    #     oy.append(20)
 
-    # for i in range(0, 20):
-    #     ox.append(i)
-    #     oy.append(20)
+    for i in range(30, 40):
+        ox.append(i)
+        oy.append(20)
 
-    for i in range(0, 20):
+    for i in range(30, 41):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
+        ox.append(i)
+        oy.append(20)
+    for i in range(1, 21):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
         ox.append(30)
         oy.append(i)
+    for i in range(1, 21):
+        ox.append(30)
+        oy.append(i)
+
     print([(i, j) for i, j in zip(ox, oy)])
     m.set_obstacle([(i, j) for i, j in zip(ox, oy)])
 

@@ -47,8 +47,7 @@ class BidirectionalBreadthFirstSearchPlanner:
             self.parent = parent
 
         def __str__(self):
-            return str(self.x) + "," + str(self.y) + "," + str(
-                self.cost) + "," + str(self.parent_index)
+            return str(self.x) + "," + str(self.y) + "," + str(self.cost) + "," + str(self.parent_index)
 
     def planning(self, sx, sy, gx, gy):
         """
@@ -65,12 +64,8 @@ class BidirectionalBreadthFirstSearchPlanner:
             ry: y position list of the final path
         """
 
-        start_node = self.Node(self.calc_xy_index(sx, self.min_x),
-                               self.calc_xy_index(sy, self.min_y), 0.0, -1,
-                               None)
-        goal_node = self.Node(self.calc_xy_index(gx, self.min_x),
-                              self.calc_xy_index(gy, self.min_y), 0.0, -1,
-                              None)
+        start_node = self.Node(self.calc_xy_index(sx, self.min_x), self.calc_xy_index(sy, self.min_y), 0.0, -1, None)
+        goal_node = self.Node(self.calc_xy_index(gx, self.min_x), self.calc_xy_index(gy, self.min_y), 0.0, -1, None)
 
         open_set_A, closed_set_A = dict(), dict()
         open_set_B, closed_set_B = dict(), dict()
@@ -148,25 +143,18 @@ class BidirectionalBreadthFirstSearchPlanner:
                 if not self.verify_node(node_B):
                     breakB = True
 
-                if (n_id_A not in closed_set_A) and \
-                        (n_id_A not in open_set_A) and (not breakA):
+                if (n_id_A not in closed_set_A) and (n_id_A not in open_set_A) and (not breakA):
                     node_A.parent = current_A
                     open_set_A[n_id_A] = node_A
 
-                if (n_id_B not in closed_set_B) and \
-                        (n_id_B not in open_set_B) and (not breakB):
+                if (n_id_B not in closed_set_B) and (n_id_B not in open_set_B) and (not breakB):
                     node_B.parent = current_B
                     open_set_B[n_id_B] = node_B
 
-        rx, ry = self.calc_final_path_bidir(
-            meet_point_A, meet_point_B, closed_set_A, closed_set_B)
-        return rx, ry
-
-    # takes both set and meeting nodes and calculate optimal path
-    def calc_final_path_bidir(self, n1, n2, setA, setB):
-        rxA, ryA = self.calc_final_path(n1, setA)
-        rxB, ryB = self.calc_final_path(n2, setB)
-
+        # rx, ry = self.calc_final_path_bidir(meet_point_A, meet_point_B, closed_set_A, closed_set_B)
+        rxA, ryA = self.calc_final_path(meet_point_A, closed_set_A)
+        rxB, ryB = self.calc_final_path(meet_point_B, closed_set_B)
+        #   列表倒序
         rxA.reverse()
         ryA.reverse()
 
@@ -175,10 +163,22 @@ class BidirectionalBreadthFirstSearchPlanner:
 
         return rx, ry
 
+    # takes both set and meeting nodes and calculate optimal path
+    # def calc_final_path_bidir(self, n1, n2, setA, setB):
+    #     rxA, ryA = self.calc_final_path(n1, setA)
+    #     rxB, ryB = self.calc_final_path(n2, setB)
+
+    #     rxA.reverse()
+    #     ryA.reverse()
+
+    #     rx = rxA + rxB
+    #     ry = ryA + ryB
+
+    #     return rx, ry
+
     def calc_final_path(self, goal_node, closed_set):
         # generate final course
-        rx, ry = [self.calc_grid_position(goal_node.x, self.min_x)], [
-            self.calc_grid_position(goal_node.y, self.min_y)]
+        rx, ry = [self.calc_grid_position(goal_node.x, self.min_x)], [self.calc_grid_position(goal_node.y, self.min_y)]
         n = closed_set[goal_node.parent_index]
         while n is not None:
             rx.append(self.calc_grid_position(n.x, self.min_x))
@@ -275,7 +275,7 @@ def main():
     sy = 10.0  # [m]
     gx = 50.0  # [m]
     gy = 50.0  # [m]
-    grid_size = 2.0  # [m]
+    grid_size = 1.0  # [m]
     robot_radius = 1.0  # [m]
 
     # set obstacle positions
@@ -298,6 +298,30 @@ def main():
     for i in range(0, 40):
         ox.append(40.0)
         oy.append(60.0 - i)
+
+    for i in range(30, 40):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(30, 41):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
+        ox.append(i)
+        oy.append(20)
+    for i in range(1, 21):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
+        ox.append(30)
+        oy.append(i)
+    for i in range(1, 21):
+        ox.append(30)
+        oy.append(i)
+
+
 
     if show_animation:  # pragma: no cover
         plt.plot(ox, oy, ".k")

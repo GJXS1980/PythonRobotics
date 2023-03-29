@@ -12,24 +12,24 @@ Implemented maintaining similarity with the pseudocode for understanding.
 Code can be significantly optimized by using a priority queue for U, etc.
 Avoiding additional imports based on repository philosophy.
 
-D* Lite算法是一种改进的D算法，用于动态环境下的路径规划问题。相对于D算法，
+D* Lite算法是一种改进的D算法,用于动态环境下的路径规划问题。相对于D算法,
 D* Lite算法在维护代价函数和更新路径方面更加高效。
 
 D* Lite算法的核心思想是使用一个"重构图"来减少路径更新时的计算量。
 "重构图"是原始地图的一个子集，包括所有可能会影响路径的节点和边。
-与D算法不同，D Lite算法在更新路径时只更新重构图内的节点和边，而不需要更新整个地图。
+与D算法不同,D Lite算法在更新路径时只更新重构图内的节点和边,而不需要更新整个地图。
 
-D* Lite算法的主要步骤如下：
+D* Lite算法的主要步骤如下:
 
-初始化：与D*算法类似，设定起点和目标点，将所有节点的代价函数设为无穷大，
-将起点的代价设为0，将起点加入open list中。同时，初始化重构图为空，将起点加入重构图中。
+初始化:与D*算法类似，设定起点和目标点,将所有节点的代价函数设为无穷大,
+将起点的代价设为0,将起点加入open list中。同时,初始化重构图为空,将起点加入重构图中。
 
-迭代搜索：在open list中找到代价函数最小的节点作为当前节点。
+迭代搜索:在open list中找到代价函数最小的节点作为当前节点。
 如果当前节点不是目标节点，则对当前节点的相邻节点进行更新。
 对于每个相邻节点，计算出从当前节点到该节点的代价，如果该代价小于该节点当前的代价，
-则更新该节点的代价，并将该节点的父节点设为当前节点。如果该节点不在open list中，
-则将其加入open list中。如果该节点已经在open list中，则更新其代价和父节点，
-并重新排序open list。与D算法不同的是，D Lite算法只更新重构图内的节点和边。
+则更新该节点的代价,并将该节点的父节点设为当前节点。如果该节点不在open list中,
+则将其加入open list中。如果该节点已经在open list中,则更新其代价和父节点,
+并重新排序open list。与D算法不同的是,D Lite算法只更新重构图内的节点和边。
 
 更新重构图：在搜索过程中，当一个节点的代价函数发生变化时，将该节点及其邻居节点加入重构图中。
 重构图的大小取决于环境的变化情况和算法的运行效率。
@@ -39,8 +39,8 @@ D* Lite算法的主要步骤如下：
 然后，重新计算重构图内节点的代价函数，并重新搜索路径。
 如果新的代价函数比旧的代价函数更优，则更新路径。
 
-D* Lite算法具有比D算法更高效的性能，特别是在大规模地图和频繁环境变化的情况下。
-由于只更新重构图内的节点和边，D Lite算法可以大大减少计算量，并且可以通过调整重构图的大小来控制算法的运行效率。
+D* Lite算法具有比D算法更高效的性能,特别是在大规模地图和频繁环境变化的情况下。
+由于只更新重构图内的节点和边,D Lite算法可以大大减少计算量,并且可以通过调整重构图的大小来控制算法的运行效率。
 
 """
 import math
@@ -99,9 +99,7 @@ class DStarLite:
         self.y_max = int(abs(max(oy) - self.y_min_world))
         self.obstacles = [Node(x - self.x_min_world, y - self.y_min_world)
                           for x, y in zip(ox, oy)]
-        self.obstacles_xy = np.array(
-            [[obstacle.x, obstacle.y] for obstacle in self.obstacles]
-        )
+        self.obstacles_xy = np.array([[obstacle.x, obstacle.y] for obstacle in self.obstacles])
         self.start = Node(0, 0)
         self.goal = Node(0, 0)
         self.U = list()  # type: ignore
@@ -414,6 +412,28 @@ def main():
     for i in range(0, 40):
         ox.append(40.0)
         oy.append(60.0 - i)
+
+    for i in range(30, 40):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(30, 41):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
+        ox.append(i)
+        oy.append(20)
+    for i in range(1, 21):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
+        ox.append(30)
+        oy.append(i)
+    for i in range(1, 21):
+        ox.append(30)
+        oy.append(i)
 
     if show_animation:
         plt.plot(ox, oy, ".k")

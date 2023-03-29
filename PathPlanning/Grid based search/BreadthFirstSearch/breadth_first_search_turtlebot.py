@@ -71,7 +71,8 @@ class BreadthFirstSearchPlanner:
             if len(open_set) == 0:
                 print("Open set is empty..")
                 break
-
+            
+            #   取第一个索引(索引为0),并弹出对应的键值对
             current = open_set.pop(list(open_set.keys())[0])
 
             c_id = self.calc_grid_index(current)
@@ -242,11 +243,21 @@ def main():
         ox.append(i)
         oy.append(20)
 
-    for i in range(0, 20):
+    for i in range(30, 41):
         ox.append(i)
         oy.append(20)
 
-    for i in range(0, 20):
+    for i in range(1, 20):
+        ox.append(i)
+        oy.append(20)
+    for i in range(1, 21):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
+        ox.append(30)
+        oy.append(i)
+    for i in range(1, 21):
         ox.append(30)
         oy.append(i)
 

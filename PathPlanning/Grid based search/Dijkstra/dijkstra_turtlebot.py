@@ -73,8 +73,8 @@ class Dijkstra:
         open_set[self.calc_index(start_node)] = start_node
 
         while True:
-            #   其中open_set 是一个待探索的节点集合，其中包含所有尚未被完全探索的节点，o 是open_set中的一个节点对象
-            #   open_set[o] 是获取节点对象的实例，open_set[o].cost 是节点对象的实际成本，
+            #   其中open_set 是一个待探索的节点集合,其中包含所有尚未被完全探索的节点,o 是open_set中的一个节点对象
+            #   open_set[o] 是获取节点对象的实例,open_set[o].cost 是节点对象的实际成本，
             c_id = min(open_set, key=lambda o: open_set[o].cost)
             current = open_set[c_id]
 
@@ -100,10 +100,16 @@ class Dijkstra:
             closed_set[c_id] = current
 
             # 基于图形允许移动模型进行网格搜索
-            for move_x, move_y, move_cost in self.motion:
-                node = self.Node(current.x + move_x,
-                                 current.y + move_y,
-                                 current.cost + move_cost, c_id)
+            # for move_x, move_y, move_cost in self.motion:
+            #     node = self.Node(current.x + move_x,
+            #                      current.y + move_y,
+            #                      current.cost + move_cost, c_id)
+
+            for i, _ in enumerate(self.motion):
+                node = self.Node(current.x + self.motion[i][0],
+                                 current.y + self.motion[i][1],
+                                 current.cost + self.motion[i][2], c_id)
+
                 n_id = self.calc_index(node)
 
                 if n_id in closed_set:
@@ -162,15 +168,15 @@ class Dijkstra:
         return round((position - minp) / self.resolution)
 
     def calc_index(self, node):
-        # 计算给定网格坐标的索引值，node参数表示节点的坐标，
-        # xwidth参数表示网格的宽度，xmin和ymin参数分别表示网格左下角的坐标
-        # 该节点的纵坐标（y）减去网格左下角的纵坐标（ymin），再乘以网格的宽度（xwidth），
-        # 然后加上该节点的横坐标（x）减去网格左下角的横坐标（xmin）
+        # 计算给定网格坐标的索引值,node参数表示节点的坐标,
+        # xwidth参数表示网格的宽度,xmin和ymin参数分别表示网格左下角的坐标
+        # 该节点的纵坐标(y)减去网格左下角的纵坐标(ymin),再乘以网格的宽度(xwidth),
+        # 然后加上该节点的横坐标(x)减去网格左下角的横坐标(xmin)
         return (node.y - self.min_y) * self.x_width + (node.x - self.min_x)
 
     def verify_node(self, node):
         """
-        用于检查一个节点是否是合法节点的函数。在具体的实现中，verify_node函数通常会考虑以下几个方面：
+        用于检查一个节点是否是合法节点的函数。在具体的实现中,verify_node函数通常会考虑以下几个方面:
         (1)检查节点是否超出了地图的边界。如果节点超出了地图的边界，那么这个节点就是不合法的。
         (2)检查节点是否被障碍物占据。如果节点被障碍物占据，那么这个节点就是不合法的。
         (3)检查节点是否已经被访问过。如果节点已经被访问过，那么这个节点就是不合法的。
@@ -267,17 +273,30 @@ def main():
     for i in range(0, 40):
         ox.append(40.0)
         oy.append(60.0 - i)
+
+
     for i in range(30, 40):
         ox.append(i)
         oy.append(20)
 
-    for i in range(0, 20):
+    for i in range(30, 41):
         ox.append(i)
         oy.append(20)
 
-    for i in range(0, 20):
+    for i in range(1, 20):
+        ox.append(i)
+        oy.append(20)
+    for i in range(1, 21):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
         ox.append(30)
         oy.append(i)
+    for i in range(1, 21):
+        ox.append(30)
+        oy.append(i)
+
 
     if show_animation:  # pragma: no cover
         plt.plot(ox, oy, ".k")

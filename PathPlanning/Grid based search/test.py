@@ -2,41 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-A* grid planning
+test
 
-author: GrantLi
-
-A*算法介绍
-A*算法是一种常用的启发式搜索算法,用于在图形地图或其他类型的图形中找到最短路径。A算法基于Dijkstra算法,
-但通过使用启发式函数来估计目标节点到当前节点的距离，可以更快地找到最短路径。
-
-下面是A*算法的理论推导：
-1.定义：
-G(n):表示从起点到节点n的实际代价(即起点到n的路径长度);
-H(n):表示从节点n到目标节点的估计代价;
-F(n):表示从起点经过节点n到目标节点的总代价(即G(n)+H(n))。
-2.算法步骤：
-将起点放入开放列表(open list)中。重复以下步骤,直到找到目标节点或者无法到达目标节点;
-从开放列表中选择F值最小的节点n,将其标记为当前节点,并将其从开放列表中移除。
-如果当前节点是目标节点，则停止搜索，返回路径。
-对于当前节点的每个相邻节点m,如果m不可通过或者已经在关闭列表(closed list)中,则跳过该节点。
-如果m不在开放列表中,则将其添加到开放列表中,并将n作为m的父节点,计算m的G值和H值。
-如果m已经在开放列表中,则检查从n到m的路径是否更优,即比较从起点到n再到m的F值和m当前的F值。
-如果前者更小,则更新m的父节点为n,并重新计算m的G值和F值。将当前节点n添加到关闭列表中。
-3.启发式函数：
-启发式函数H(n)用于估计从节点n到目标节点的代价。它必须满足以下条件:
-H(n)不能低估实际代价；
-H(n)越准确,A*算法搜索的速度越快；
-如果H(n)恒为0,A*算法就退化为Dijkstra算法。
-常见的启发式函数包括曼哈顿距离、欧几里得距离和切比雪夫距离。
-
-4.算法分析：
-A算法的时间复杂度和空间复杂度都与搜索图的规模和启发式函数的质量有关。当启发式函数H(n)非常准确时，
-A算法的效率最高,因为它可以更快地找到最短路径。但如果H(n)非常不准确,则A*算法可能会扩展很多无用的节点，从而变得非常缓慢。
-总之,A*算法是一种高效的搜索算法，它在很多实际应用中都得到了广泛的应用。
-
-See Wikipedia article (https://en.wikipedia.org/wiki/A*_search_algorithm)
-
+Author: GrantLi
 """
 
 import math
@@ -44,7 +12,7 @@ import matplotlib.pyplot as plt
 
 show_animation = True
 
-class AStarPlanner:
+class Test:
     def __init__(self, ox, oy, resolution, rr):
         """
         初始化A*规划栅格地图
@@ -61,7 +29,7 @@ class AStarPlanner:
         self.obstacle_map = None
         self.x_width, self.y_width = 0, 0
         self.motion = self.get_motion_model()
-        # print(self.motion)
+        print(self.motion[0])
         self.calc_obstacle_map(ox, oy)
 
     class Node:
@@ -95,9 +63,9 @@ class AStarPlanner:
         start_node = self.Node(self.calc_xy_index(sx, self.min_x), self.calc_xy_index(sy, self.min_y), 0.0, -1)
         #   目标节点
         goal_node = self.Node(self.calc_xy_index(gx, self.min_x), self.calc_xy_index(gy, self.min_y), 0.0, -1)
-        # print(start_node, goal_node)
         open_set, closed_set = dict(), dict()
         open_set[self.calc_grid_index(start_node)] = start_node
+        print(len(open_set))
 
         while True:
             if len(open_set) == 0:
@@ -105,22 +73,22 @@ class AStarPlanner:
                 break
             #   F(n) = H(n) + G(n)
             #   取最小代价并记录当前索引值
-            #   其中open_set 是一个待探索的节点集合,其中包含所有尚未被完全探索的节点,o 是open_set中的一个节点对象
-            #   open_set[o] 是获取节点对象的实例,open_set[o].cost 是节点对象的实际成本，
+            #   其中open_set 是一个待探索的节点集合，其中包含所有尚未被完全探索的节点，o 是open_set中的一个节点对象
+            #   open_set[o] 是获取节点对象的实例，open_set[o].cost 是节点对象的实际成本，
             #   self.calc_heuristic(goal_node, open_set[o]) 是使用启发式函数计算节点到目标节点的估计成本
-            c_id = min(open_set, key=lambda o: open_set[o].cost + math.hypot(goal_node.x - open_set[o].x, goal_node.y - open_set[o].y))
+            c_id = min(open_set, key=lambda o: open_set[o].cost + self.calc_heuristic(goal_node, open_set[o]))
             # print(c_id )
             current = open_set[c_id]
             # print(current)
 
-            # 绘制图形
-            if show_animation:  # pragma: no cover
-                plt.plot(self.calc_grid_position(current.x, self.min_x),
-                         self.calc_grid_position(current.y, self.min_y), "xc")
-                # for stopping simulation with the esc key.
-                plt.gcf().canvas.mpl_connect('key_release_event', lambda event: [exit(0) if event.key == 'escape' else None])
-                if len(closed_set.keys()) % 10 == 0:
-                    plt.pause(0.001)
+        #     # 绘制图形
+        #     if show_animation:  # pragma: no cover
+        #         plt.plot(self.calc_grid_position(current.x, self.min_x),
+        #                  self.calc_grid_position(current.y, self.min_y), "xc")
+        #         # for stopping simulation with the esc key.
+        #         plt.gcf().canvas.mpl_connect('key_release_event', lambda event: [exit(0) if event.key == 'escape' else None])
+        #         if len(closed_set.keys()) % 10 == 0:
+        #             plt.pause(0.001)
 
             #   到达目标点时输出信息
             if current.x == goal_node.x and current.y == goal_node.y:
@@ -156,7 +124,6 @@ class AStarPlanner:
                         # This path is the best until now. record it
                         open_set[n_id] = node
         rx, ry = self.calc_final_path(goal_node, closed_set)
-        # print(rx, ry )
 
         return rx, ry
 
@@ -174,6 +141,7 @@ class AStarPlanner:
         # generate final course
         rx, ry = [self.calc_grid_position(goal_node.x, self.min_x)], [self.calc_grid_position(goal_node.y, self.min_y)]
         parent_index = goal_node.parent_index
+        print(parent_index)
         while parent_index != -1:
             n = closed_set[parent_index]
             rx.append(self.calc_grid_position(n.x, self.min_x))
@@ -182,14 +150,14 @@ class AStarPlanner:
 
         return rx, ry
 
-    # @staticmethod
-    # def calc_heuristic(n1, n2):
-    #     # 启发式函数,估计从当前节点到目标节点的距离，并根据该距离来指导搜索方向
-    #     w = 1.0  # weight of heuristic
-    #     # 图形可以允许朝八个方向移动，这里采用对角距离
-    #     d = w * math.hypot(n1.x - n2.x, n1.y - n2.y)
-    #     # print(d)
-    #     return d
+    @staticmethod
+    def calc_heuristic(n1, n2):
+        # 启发式函数,估计从当前节点到目标节点的距离，并根据该距离来指导搜索方向
+        w = 1.0  # weight of heuristic
+        # 图形可以允许朝八个方向移动，这里采用对角距离
+        d = w * math.hypot(n1.x - n2.x, n1.y - n2.y)
+        # print(d)
+        return d
 
     def calc_grid_position(self, index, min_position):
         """
@@ -209,15 +177,15 @@ class AStarPlanner:
         return round((position - min_pos) / self.resolution)
 
     def calc_grid_index(self, node):
-        # 计算给定网格坐标的索引值,node参数表示节点的坐标,
-        # xwidth参数表示网格的宽度,xmin和ymin参数分别表示网格左下角的坐标
-        # 该节点的纵坐标(y)减去网格左下角的纵坐标(ymin),再乘以网格的宽度(xwidth),
-        # 然后加上该节点的横坐标(x)减去网格左下角的横坐标(xmin)
+        # 计算给定网格坐标的索引值，node参数表示节点的坐标，
+        # xwidth参数表示网格的宽度，xmin和ymin参数分别表示网格左下角的坐标
+        # 该节点的纵坐标（y）减去网格左下角的纵坐标（ymin），再乘以网格的宽度（xwidth），
+        # 然后加上该节点的横坐标（x）减去网格左下角的横坐标（xmin）
         return (node.y - self.min_y) * self.x_width + (node.x - self.min_x)
 
     def verify_node(self, node):
         """
-        用于检查一个节点是否是合法节点的函数。在具体的实现中,verify_node函数通常会考虑以下几个方面:
+        用于检查一个节点是否是合法节点的函数。在具体的实现中，verify_node函数通常会考虑以下几个方面：
         (1)检查节点是否超出了地图的边界。如果节点超出了地图的边界，那么这个节点就是不合法的。
         (2)检查节点是否被障碍物占据。如果节点被障碍物占据，那么这个节点就是不合法的。
         (3)检查节点是否已经被访问过。如果节点已经被访问过，那么这个节点就是不合法的。
@@ -325,17 +293,17 @@ def main():
         ox.append(i)
         oy.append(20)
 
-    for i in range(1, 20):
+    for i in range(0, 20):
         ox.append(i)
         oy.append(20)
-    for i in range(1, 21):
+    for i in range(0, 21):
         ox.append(i)
         oy.append(20)
 
-    for i in range(1, 20):
+    for i in range(0, 20):
         ox.append(30)
         oy.append(i)
-    for i in range(1, 21):
+    for i in range(0, 21):
         ox.append(30)
         oy.append(i)
         
@@ -345,8 +313,11 @@ def main():
         plt.plot(gx, gy, "xb")
         plt.grid(True)
         plt.axis("equal")
+        plt.pause(1)
 
-    a_star = AStarPlanner(ox, oy, grid_size, robot_radius)
+    a_star = Test(ox, oy, grid_size, robot_radius)
+    # node_data = a_star.Node(10, 10, 0, -1)
+    # print(node_data.cost, node_data.parent_index)
     rx, ry = a_star.planning(sx, sy, gx, gy)
     # print((rx))
 

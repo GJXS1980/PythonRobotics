@@ -84,11 +84,13 @@ class BidirectionalAStarPlanner:
                 print("Open set B is empty..")
                 break
 
-            c_id_A = min(open_set_A, key=lambda o: self.find_total_cost(open_set_A, o, current_B))
+            # c_id_A = min(open_set_A, key=lambda o: self.find_total_cost(open_set_A, o, current_B))
+            c_id_A = min(open_set_A, key=lambda o: open_set_A[o].cost + math.hypot(current_B.x - open_set_A[o].x, current_B.y - open_set_A[o].y))
 
             current_A = open_set_A[c_id_A]
 
-            c_id_B = min(open_set_B, key=lambda o: self.find_total_cost(open_set_B, o, current_A))
+            # c_id_B = min(open_set_B, key=lambda o: self.find_total_cost(open_set_B, o, current_A))
+            c_id_B = min(open_set_B, key=lambda o: open_set_B[o].cost + math.hypot(current_A.x - open_set_B[o].x, current_A.y - open_set_B[o].y))
 
             current_B = open_set_B[c_id_B]
 
@@ -113,11 +115,11 @@ class BidirectionalAStarPlanner:
                 meet_point_B = current_B
                 break
 
-            # Remove the item from the open set
+            # 从open列表中删除
             del open_set_A[c_id_A]
             del open_set_B[c_id_B]
 
-            # Add it to the closed set
+            # 添加到close列表
             closed_set_A[c_id_A] = current_A
             closed_set_B[c_id_B] = current_B
 
@@ -133,8 +135,7 @@ class BidirectionalAStarPlanner:
                                      current_B.cost + self.motion[i][2],
                                      c_id_B)]
 
-                n_ids = [self.calc_grid_index(c_nodes[0]),
-                         self.calc_grid_index(c_nodes[1])]
+                n_ids = [self.calc_grid_index(c_nodes[0]), self.calc_grid_index(c_nodes[1])]
 
                 # If the node is not safe, do nothing
                 continue_ = self.check_nodes_and_sets(c_nodes, closed_set_A, closed_set_B, n_ids)
@@ -157,28 +158,40 @@ class BidirectionalAStarPlanner:
                             # This path is the best until now. record it
                             open_set_B[n_ids[1]] = c_nodes[1]
 
-        rx, ry = self.calc_final_bidirectional_path(
-            meet_point_A, meet_point_B, closed_set_A, closed_set_B)
+        rx_A, ry_A = self.calc_final_path(meet_point_A, closed_set_A)
+        rx_B, ry_B = self.calc_final_path(meet_point_B, closed_set_B)
+        #   对rx_A和ry_A进行反向排序
+        rx_A.reverse()
+        ry_A.reverse()
+
+        #   列表相加
+        rx = rx_A + rx_B
+        ry = ry_A + ry_B
+        # print(rx, ry)
+        
+        # rx, ry = self.calc_final_bidirectional_path(meet_point_A, meet_point_B, closed_set_A, closed_set_B)
 
         return rx, ry
 
     # takes two sets and two meeting nodes and return the optimal path
-    def calc_final_bidirectional_path(self, n1, n2, setA, setB):
-        rx_A, ry_A = self.calc_final_path(n1, setA)
-        rx_B, ry_B = self.calc_final_path(n2, setB)
+    # def calc_final_bidirectional_path(self, n1, n2, setA, setB):
+    #     #   生成最终路径
+    #     rx_A, ry_A = self.calc_final_path(n1, setA)
+    #     rx_B, ry_B = self.calc_final_path(n2, setB)
 
-        rx_A.reverse()
-        ry_A.reverse()
+    #     #   对rx_A和rx_B进行反向排序
+    #     rx_A.reverse()
+    #     ry_A.reverse()
 
-        rx = rx_A + rx_B
-        ry = ry_A + ry_B
+    #     #   列表相加
+    #     rx = rx_A + rx_B
+    #     ry = ry_A + ry_B
 
-        return rx, ry
+    #     return rx, ry
 
     def calc_final_path(self, goal_node, closed_set):
-        # generate final course
-        rx, ry = [self.calc_grid_position(goal_node.x, self.min_x)], \
-                 [self.calc_grid_position(goal_node.y, self.min_y)]
+        # 反向寻找生成的路径
+        rx, ry = [self.calc_grid_position(goal_node.x, self.min_x)], [self.calc_grid_position(goal_node.y, self.min_y)]
         parent_index = goal_node.parent_index
         while parent_index != -1:
             n = closed_set[parent_index]
@@ -189,6 +202,7 @@ class BidirectionalAStarPlanner:
         return rx, ry
 
     def check_nodes_and_sets(self, c_nodes, closedSet_A, closedSet_B, n_ids):
+        #   检测节点是否在closed列表中
         continue_ = [False, False]
         if not self.verify_node(c_nodes[0]) or n_ids[0] in closedSet_A:
             continue_[0] = True
@@ -198,19 +212,23 @@ class BidirectionalAStarPlanner:
 
         return continue_
 
-    @staticmethod
-    def calc_heuristic(n1, n2):
-        w = 1.0  # weight of heuristic
-        d = w * math.hypot(n1.x - n2.x, n1.y - n2.y)
-        return d
+    # @staticmethod
+    # def calc_heuristic(n1, n2):
+    #     w = 1.0  # weight of heuristic
+    #     #   求对角距离
+    #     d = w * math.hypot(n1.x - n2.x, n1.y - n2.y)
+    #     return d
 
-    def find_total_cost(self, open_set, lambda_, n1):
-        g_cost = open_set[lambda_].cost
-        h_cost = self.calc_heuristic(n1, open_set[lambda_])
-        f_cost = g_cost + h_cost
-        return f_cost
+    # def find_total_cost(self, open_set, lambda_, n1):
+    #     #   计算代价F(n)
+    #     g_cost = open_set[lambda_].cost
+    #     h_cost = self.calc_heuristic(n1, open_set[lambda_])
+    #     f_cost = g_cost + h_cost
+    #     print(f_cost)
+    #     return f_cost
 
     def calc_grid_position(self, index, min_position):
+        #   计算网格位置
         """
         calc grid position
 
@@ -222,12 +240,15 @@ class BidirectionalAStarPlanner:
         return pos
 
     def calc_xy_index(self, position, min_pos):
+        #   计算xy索引
         return round((position - min_pos) / self.resolution)
 
     def calc_grid_index(self, node):
+        #   计算网格的索引
         return (node.y - self.min_y) * self.x_width + (node.x - self.min_x)
 
     def verify_node(self, node):
+        #   检测节点是否合法
         px = self.calc_grid_position(node.x, self.min_x)
         py = self.calc_grid_position(node.y, self.min_y)
 
@@ -247,7 +268,7 @@ class BidirectionalAStarPlanner:
         return True
 
     def calc_obstacle_map(self, ox, oy):
-
+        #   计算障碍物区域
         self.min_x = round(min(ox))
         self.min_y = round(min(oy))
         self.max_x = round(max(ox))
@@ -277,7 +298,7 @@ class BidirectionalAStarPlanner:
 
     @staticmethod
     def get_motion_model():
-        # dx, dy, cost
+        # dx, dy, cost(移动模型)
         motion = [[1, 0, 1],
                   [0, 1, 1],
                   [-1, 0, 1],
@@ -286,7 +307,6 @@ class BidirectionalAStarPlanner:
                   [-1, 1, math.sqrt(2)],
                   [1, -1, math.sqrt(2)],
                   [1, 1, math.sqrt(2)]]
-
         return motion
 
 
@@ -326,11 +346,21 @@ def main():
         ox.append(i)
         oy.append(20)
 
-    for i in range(0, 20):
+    for i in range(30, 41):
         ox.append(i)
         oy.append(20)
 
-    for i in range(0, 20):
+    for i in range(1, 20):
+        ox.append(i)
+        oy.append(20)
+    for i in range(1, 21):
+        ox.append(i)
+        oy.append(20)
+
+    for i in range(1, 20):
+        ox.append(30)
+        oy.append(i)
+    for i in range(1, 21):
         ox.append(30)
         oy.append(i)
 
