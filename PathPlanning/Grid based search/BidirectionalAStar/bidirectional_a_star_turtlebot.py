@@ -323,47 +323,31 @@ def main():
 
     # set obstacle positions
     ox, oy = [], []
-    for i in range(-10, 60):
-        ox.append(i)
-        oy.append(-10.0)
-    for i in range(-10, 60):
-        ox.append(60.0)
-        oy.append(i)
     for i in range(-10, 61):
-        ox.append(i)
-        oy.append(60.0)
-    for i in range(-10, 61):
-        ox.append(-10.0)
-        oy.append(i)
-    for i in range(-10, 40):
-        ox.append(20.0)
-        oy.append(i)
-    for i in range(0, 40):
-        ox.append(40.0)
-        oy.append(60.0 - i)
-
-    for i in range(30, 40):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(30, 41):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(1, 20):
-        ox.append(i)
-        oy.append(20)
-    for i in range(1, 21):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(1, 20):
-        ox.append(30)
-        oy.append(i)
-    for i in range(1, 21):
-        ox.append(30)
-        oy.append(i)
-
+        if -11 < i and i < 60:
+            ox.append(i)
+            oy.append(60)
+            ox.append(-10)
+            oy.append(i)
+            ox.append(i)
+            oy.append(-10)
+            ox.append(60)
+            oy.append(i)
+        if -11 < i and i < 40:
+            ox.append(20)
+            oy.append(i)
+        if -1 < i and i < 40:
+            ox.append(40)
+            oy.append(60 - i)
+        if 29 < i and i < 41:
+            ox.append(i)
+            oy.append(20)
+        if 0 < i and i < 21:
+            ox.append(i)
+            oy.append(20)
+            ox.append(30)
+            oy.append(i)
+            
     if show_animation:  # pragma: no cover
         plt.plot(ox, oy, ".k")
         plt.plot(sx, sy, "og")

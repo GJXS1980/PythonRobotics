@@ -17,7 +17,7 @@ D* Lite算法在维护代价函数和更新路径方面更加高效。
 
 D* Lite算法的核心思想是使用一个"重构图"来减少路径更新时的计算量。
 "重构图"是原始地图的一个子集，包括所有可能会影响路径的节点和边。
-与D算法不同,D Lite算法在更新路径时只更新重构图内的节点和边,而不需要更新整个地图。
+与D*算法不同,D* Lite算法在更新路径时只更新重构图内的节点和边,而不需要更新整个地图。
 
 D* Lite算法的主要步骤如下:
 
@@ -29,7 +29,7 @@ D* Lite算法的主要步骤如下:
 对于每个相邻节点，计算出从当前节点到该节点的代价，如果该代价小于该节点当前的代价，
 则更新该节点的代价,并将该节点的父节点设为当前节点。如果该节点不在open list中,
 则将其加入open list中。如果该节点已经在open list中,则更新其代价和父节点,
-并重新排序open list。与D算法不同的是,D Lite算法只更新重构图内的节点和边。
+并重新排序open list。与D*算法不同的是,D* Lite算法只更新重构图内的节点和边。
 
 更新重构图：在搜索过程中，当一个节点的代价函数发生变化时，将该节点及其邻居节点加入重构图中。
 重构图的大小取决于环境的变化情况和算法的运行效率。
@@ -40,14 +40,13 @@ D* Lite算法的主要步骤如下:
 如果新的代价函数比旧的代价函数更优，则更新路径。
 
 D* Lite算法具有比D算法更高效的性能,特别是在大规模地图和频繁环境变化的情况下。
-由于只更新重构图内的节点和边,D Lite算法可以大大减少计算量,并且可以通过调整重构图的大小来控制算法的运行效率。
+由于只更新重构图内的节点和边,D* Lite算法可以大大减少计算量,并且可以通过调整重构图的大小来控制算法的运行效率。
 
 """
 import math
 import matplotlib.pyplot as plt
 import random
 import numpy as np
-
 from typing import Tuple as tuple
 
 show_animation = True
@@ -56,28 +55,34 @@ p_create_random_obstacle = 0
 
 
 class Node:
+    """
+    创建节点(x,y,cost)
+    """
     def __init__(self, x: int = 0, y: int = 0, cost: float = 0.0):
         self.x = x
         self.y = y
         self.cost = cost
 
-
 def add_coordinates(node1: Node, node2: Node):
+    """
+    将两个节点合并成新节点(x,y,cost相加)
+    """
     new_node = Node()
     new_node.x = node1.x + node2.x
     new_node.y = node1.y + node2.y
     new_node.cost = node1.cost + node2.cost
     return new_node
 
-
 def compare_coordinates(node1: Node, node2: Node):
+    """
+    比较两个节点的x,y
+    """
     return node1.x == node2.x and node1.y == node2.y
 
-
 class DStarLite:
-
     # Please adjust the heuristic function (h) if you change the list of
     # possible motions
+    #   运动模型
     motions = [
         Node(1, 0, 1),
         Node(0, 1, 1),
@@ -86,8 +91,7 @@ class DStarLite:
         Node(1, 1, math.sqrt(2)),
         Node(1, -1, math.sqrt(2)),
         Node(-1, 1, math.sqrt(2)),
-        Node(-1, -1, math.sqrt(2))
-    ]
+        Node(-1, -1, math.sqrt(2))]
 
     def __init__(self, ox: list, oy: list):
         # Ensure that within the algorithm implementation all node coordinates
@@ -387,53 +391,35 @@ class DStarLite:
 def main():
 
     # start and goal position
-    sx = 10  # [m]
-    sy = 10  # [m]
-    gx = 50  # [m]
-    gy = 50  # [m]
+    sx, sy = 10, 10  # [m]
+    gx, gy = 50, 50  # [m]
 
-    # set obstacle positions
+    # 设置障碍物位置
     ox, oy = [], []
-    for i in range(-10, 60):
-        ox.append(i)
-        oy.append(-10.0)
-    for i in range(-10, 60):
-        ox.append(60.0)
-        oy.append(i)
     for i in range(-10, 61):
-        ox.append(i)
-        oy.append(60.0)
-    for i in range(-10, 61):
-        ox.append(-10.0)
-        oy.append(i)
-    for i in range(-10, 40):
-        ox.append(20.0)
-        oy.append(i)
-    for i in range(0, 40):
-        ox.append(40.0)
-        oy.append(60.0 - i)
-
-    for i in range(30, 40):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(30, 41):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(1, 20):
-        ox.append(i)
-        oy.append(20)
-    for i in range(1, 21):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(1, 20):
-        ox.append(30)
-        oy.append(i)
-    for i in range(1, 21):
-        ox.append(30)
-        oy.append(i)
+        if -11 < i and i < 60:
+            ox.append(i)
+            oy.append(60)
+            ox.append(-10)
+            oy.append(i)
+            ox.append(i)
+            oy.append(-10)
+            ox.append(60)
+            oy.append(i)
+        if -11 < i and i < 40:
+            ox.append(20)
+            oy.append(i)
+        if -1 < i and i < 40:
+            ox.append(40)
+            oy.append(60 - i)
+        if 29 < i and i < 41:
+            ox.append(i)
+            oy.append(20)
+        if 0 < i and i < 21:
+            ox.append(i)
+            oy.append(20)
+            ox.append(30)
+            oy.append(i)
 
     if show_animation:
         plt.plot(ox, oy, ".k")

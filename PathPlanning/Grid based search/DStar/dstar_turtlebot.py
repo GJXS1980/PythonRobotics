@@ -9,7 +9,7 @@ author: Nirnay Roy
 
 D*算法是一种基于局部改变的路径搜索算法，主要用于解决动态环境下的路径规划问题。
 
-D算法的核心思想是基于A算法,即在已知的网格地图中,使用启发式搜索找到一条最优路径,
+D*算法的核心思想是基于A*算法,即在已知的网格地图中,使用启发式搜索找到一条最优路径,
 但与A不同的是,D算法在搜索过程中可以对路径进行局部修改,以适应动态环境的变化。
 具体来说,D*算法将搜索空间看作一个图,每个节点表示地图上的一个位置，每条边表示两个位置之间的连接。
 D*算法通过在图中修改代价函数,从而使路径在动态环境下得到更新。具体来说,
@@ -287,46 +287,30 @@ def main():
     m = Map(100, 100)
     #   设定障碍物点的位置
     ox, oy = [], []
-    for i in range(-10, 60):
-        ox.append(i)
-        oy.append(-10)
-    for i in range(-10, 60):
-        ox.append(60)
-        oy.append(i)
     for i in range(-10, 61):
-        ox.append(i)
-        oy.append(60)
-    for i in range(-10, 61):
-        ox.append(-10)
-        oy.append(i)
-    for i in range(-10, 40):
-        ox.append(20)
-        oy.append(i)
-    for i in range(0, 40):
-        ox.append(40)
-        oy.append(60 - i)
-
-    for i in range(30, 40):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(30, 41):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(1, 20):
-        ox.append(i)
-        oy.append(20)
-    for i in range(1, 21):
-        ox.append(i)
-        oy.append(20)
-
-    for i in range(1, 20):
-        ox.append(30)
-        oy.append(i)
-    for i in range(1, 21):
-        ox.append(30)
-        oy.append(i)
+        if -11 < i and i < 60:
+            ox.append(i)
+            oy.append(60)
+            ox.append(-10)
+            oy.append(i)
+            ox.append(i)
+            oy.append(-10)
+            ox.append(60)
+            oy.append(i)
+        if -11 < i and i < 40:
+            ox.append(20)
+            oy.append(i)
+        if -1 < i and i < 40:
+            ox.append(40)
+            oy.append(60 - i)
+        if 29 < i and i < 41:
+            ox.append(i)
+            oy.append(20)
+        if 0 < i and i < 21:
+            ox.append(i)
+            oy.append(20)
+            ox.append(30)
+            oy.append(i)
 
     #   将ox和oy对象中对应的元素打包成一个个元组(ox, oy),返回由这些元组组成的列表
     m.set_obstacle([(i, j) for i, j in zip(ox, oy)])
