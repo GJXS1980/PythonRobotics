@@ -132,7 +132,7 @@ class Dstar:
         h(X):代价函数估计,表示当前State到G的开销估计
         c(X,Y):表示X与Y之间的路径开销
         b(X)=Y表示X的父辈为Y
-        K(X):Key Function,该值是优先队列Openlist中的排序依据,K值最小的State位于队列头
+        k(X):Key Function,该值是优先队列Openlist中的排序依据,K值最小的State位于队列头
         k_old:表示所有位于Openlist上的state的最小K值
         """  
         x = self.min_state()    #   获取open list列表中最小k的节点
