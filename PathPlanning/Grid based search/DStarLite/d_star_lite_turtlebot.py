@@ -75,14 +75,14 @@ def add_coordinates(node1: Node, node2: Node):
 
 def compare_coordinates(node1: Node, node2: Node):
     """
-    比较两个节点的x,y
+    比较两个节点的x,y,返回布尔值
     """
     return node1.x == node2.x and node1.y == node2.y
 
 class DStarLite:
     # Please adjust the heuristic function (h) if you change the list of
     # possible motions
-    #   运动模型
+    #   运动模型(8邻域)
     motions = [
         Node(1, 0, 1),
         Node(0, 1, 1),
@@ -101,27 +101,36 @@ class DStarLite:
         self.y_min_world = int(min(oy))
         self.x_max = int(abs(max(ox) - self.x_min_world))
         self.y_max = int(abs(max(oy) - self.y_min_world))
-        self.obstacles = [Node(x - self.x_min_world, y - self.y_min_world)
-                          for x, y in zip(ox, oy)]
+        #  设置障碍物
+        self.obstacles = [Node(x - self.x_min_world, y - self.y_min_world) for x, y in zip(ox, oy)]
         self.obstacles_xy = np.array([[obstacle.x, obstacle.y] for obstacle in self.obstacles])
+        #   初始化起始和终点节点
         self.start = Node(0, 0)
         self.goal = Node(0, 0)
-        self.U = list()  # type: ignore
-        self.km = 0.0
+
+        self.U = list()  # 优先列表U设为空，type: ignore
+        self.km = 0.0   # km设置为0
         self.kold = 0.0
-        self.rhs = self.create_grid(float("inf"))
+        self.rhs = self.create_grid(float("inf"))   # 目标网格的rhs值设置为无穷大
         self.g = self.create_grid(float("inf"))
         self.detected_obstacles_xy = np.empty((0, 2))
         self.xy = np.empty((0, 2))
+
         if show_animation:
             self.detected_obstacles_for_plotting_x = list()  # type: ignore
             self.detected_obstacles_for_plotting_y = list()  # type: ignore
         self.initialized = False
 
     def create_grid(self, val: float):
+        """
+        创建x_max行,y_max列,值为val的网格
+        """
         return np.full((self.x_max, self.y_max), val)
 
     def is_obstacle(self, node: Node):
+        """
+        判断节点是否位于障碍物中，返回布尔值
+        """
         x = np.array([node.x])
         y = np.array([node.y])
         obstacle_x_equal = self.obstacles_xy[:, 0] == x
@@ -137,16 +146,21 @@ class DStarLite:
         return is_in_obstacles or is_in_detected_obstacles
 
     def c(self, node1: Node, node2: Node):
+        """
+        如果节点位于障碍物中，返回无穷大
+        返回节点的代价
+        """
         if self.is_obstacle(node2):
             # Attempting to move from or to an obstacle
             return math.inf
         new_node = Node(node1.x-node2.x, node1.y-node2.y)
-        detected_motion = list(filter(lambda motion:
-                                      compare_coordinates(motion, new_node),
-                                      self.motions))
+        detected_motion = list(filter(lambda motion: compare_coordinates(motion, new_node), self.motions))
         return detected_motion[0].cost
 
     def h(self, s: Node):
+        """
+        返回1
+        """
         # Cannot use the 2nd euclidean norm as this might sometimes generate
         # heuristics that overestimate the cost, making them inadmissible,
         # due to rounding errors etc (when combined with calculate_key)
@@ -161,27 +175,43 @@ class DStarLite:
         return 1
 
     def calculate_key(self, s: Node):
-        return (min(self.g[s.x][s.y], self.rhs[s.x][s.y]) + self.h(s)
-                + self.km, min(self.g[s.x][s.y], self.rhs[s.x][s.y]))
+        """
+        计算节点s的key值
+        """
+        return (min(self.g[s.x][s.y], self.rhs[s.x][s.y]) + self.h(s) + self.km, min(self.g[s.x][s.y], self.rhs[s.x][s.y]))
 
     def is_valid(self, node: Node):
+        """
+        判断节点是否有效
+        """
         if 0 <= node.x < self.x_max and 0 <= node.y < self.y_max:
             return True
         return False
 
     def get_neighbours(self, u: Node):
-        return [add_coordinates(u, motion) for motion in self.motions
-                if self.is_valid(add_coordinates(u, motion))]
+        """
+        获取8邻域节点
+        """
+        return [add_coordinates(u, motion) for motion in self.motions if self.is_valid(add_coordinates(u, motion))]
 
     def pred(self, u: Node):
+        """
+        返回节点u的8邻域节点
+        """
         # Grid, so each vertex is connected to the ones around it
         return self.get_neighbours(u)
 
     def succ(self, u: Node):
+        """
+        返回节点u的8邻域节点
+        """
         # Grid, so each vertex is connected to the ones around it
         return self.get_neighbours(u)
 
     def initialize(self, start: Node, goal: Node):
+        """
+        初始化参数
+        """
         self.start.x = start.x - self.x_min_world
         self.start.y = start.y - self.y_min_world
         self.goal.x = goal.x - self.x_min_world
@@ -198,13 +228,13 @@ class DStarLite:
             self.detected_obstacles_xy = np.empty((0, 2))
 
     def update_vertex(self, u: Node):
+        """
+        更新u点的key值
+        """
         if not compare_coordinates(u, self.goal):
-            self.rhs[u.x][u.y] = min([self.c(u, sprime) +
-                                      self.g[sprime.x][sprime.y]
-                                      for sprime in self.succ(u)])
+            self.rhs[u.x][u.y] = min([self.c(u, sprime) + self.g[sprime.x][sprime.y] for sprime in self.succ(u)])
         if any([compare_coordinates(u, node) for node, key in self.U]):
-            self.U = [(node, key) for node, key in self.U
-                      if not compare_coordinates(node, u)]
+            self.U = [(node, key) for node, key in self.U if not compare_coordinates(node, u)]
             self.U.sort(key=lambda x: x[1])
         if self.g[u.x][u.y] != self.rhs[u.x][u.y]:
             self.U.append((u, self.calculate_key(u)))
@@ -212,17 +242,20 @@ class DStarLite:
 
     def compare_keys(self, key_pair1: tuple[float, float],
                      key_pair2: tuple[float, float]):
-        return key_pair1[0] < key_pair2[0] or \
-               (key_pair1[0] == key_pair2[0] and key_pair1[1] < key_pair2[1])
+        """
+        比较两个key值
+        """
+        return key_pair1[0] < key_pair2[0] or (key_pair1[0] == key_pair2[0] and key_pair1[1] < key_pair2[1])
 
     def compute_shortest_path(self):
+        """
+        计算最短路径
+        """
         self.U.sort(key=lambda x: x[1])
         has_elements = len(self.U) > 0
-        start_key_not_updated = self.compare_keys(
-            self.U[0][1], self.calculate_key(self.start)
-        )
-        rhs_not_equal_to_g = self.rhs[self.start.x][self.start.y] != \
-            self.g[self.start.x][self.start.y]
+        start_key_not_updated = self.compare_keys(self.U[0][1], self.calculate_key(self.start))
+        rhs_not_equal_to_g = self.rhs[self.start.x][self.start.y] != self.g[self.start.x][self.start.y]
+        #   
         while has_elements and start_key_not_updated or rhs_not_equal_to_g:
             self.kold = self.U[0][1]
             u = self.U[0][0]
@@ -239,18 +272,17 @@ class DStarLite:
                 for s in self.pred(u) + [u]:
                     self.update_vertex(s)
             self.U.sort(key=lambda x: x[1])
-            start_key_not_updated = self.compare_keys(
-                self.U[0][1], self.calculate_key(self.start)
-            )
-            rhs_not_equal_to_g = self.rhs[self.start.x][self.start.y] != \
-                self.g[self.start.x][self.start.y]
+            start_key_not_updated = self.compare_keys(self.U[0][1], self.calculate_key(self.start))
+            rhs_not_equal_to_g = self.rhs[self.start.x][self.start.y] != self.g[self.start.x][self.start.y]
 
     def detect_changes(self):
+        """
+        检测路径是否发生改变
+        """
         changed_vertices = list()
         if len(self.spoofed_obstacles) > 0:
             for spoofed_obstacle in self.spoofed_obstacles[0]:
-                if compare_coordinates(spoofed_obstacle, self.start) or \
-                   compare_coordinates(spoofed_obstacle, self.goal):
+                if compare_coordinates(spoofed_obstacle, self.start) or compare_coordinates(spoofed_obstacle, self.goal):
                     continue
                 changed_vertices.append(spoofed_obstacle)
                 self.detected_obstacles_xy = np.concatenate(
@@ -260,12 +292,9 @@ class DStarLite:
                     )
                 )
                 if show_animation:
-                    self.detected_obstacles_for_plotting_x.append(
-                        spoofed_obstacle.x + self.x_min_world)
-                    self.detected_obstacles_for_plotting_y.append(
-                        spoofed_obstacle.y + self.y_min_world)
-                    plt.plot(self.detected_obstacles_for_plotting_x,
-                             self.detected_obstacles_for_plotting_y, ".k")
+                    self.detected_obstacles_for_plotting_x.append(spoofed_obstacle.x + self.x_min_world)
+                    self.detected_obstacles_for_plotting_y.append(spoofed_obstacle.y + self.y_min_world)
+                    plt.plot(self.detected_obstacles_for_plotting_x, self.detected_obstacles_for_plotting_y, ".k")
                     plt.pause(pause_time)
             self.spoofed_obstacles.pop(0)
 
@@ -275,8 +304,7 @@ class DStarLite:
             x = random.randint(0, self.x_max - 1)
             y = random.randint(0, self.y_max - 1)
             new_obs = Node(x, y)
-            if compare_coordinates(new_obs, self.start) or \
-               compare_coordinates(new_obs, self.goal):
+            if compare_coordinates(new_obs, self.start) or compare_coordinates(new_obs, self.goal):
                 return changed_vertices
             changed_vertices.append(Node(x, y))
             self.detected_obstacles_xy = np.concatenate(
@@ -286,28 +314,28 @@ class DStarLite:
                 )
             )
             if show_animation:
-                self.detected_obstacles_for_plotting_x.append(x +
-                                                              self.x_min_world)
-                self.detected_obstacles_for_plotting_y.append(y +
-                                                              self.y_min_world)
-                plt.plot(self.detected_obstacles_for_plotting_x,
-                         self.detected_obstacles_for_plotting_y, ".k")
+                self.detected_obstacles_for_plotting_x.append(x + self.x_min_world)
+                self.detected_obstacles_for_plotting_y.append(y + self.y_min_world)
+                plt.plot(self.detected_obstacles_for_plotting_x, self.detected_obstacles_for_plotting_y, ".k")
                 plt.pause(pause_time)
         return changed_vertices
 
     def compute_current_path(self):
+        """
+        计算当前路径
+        """
         path = list()
         current_point = Node(self.start.x, self.start.y)
         while not compare_coordinates(current_point, self.goal):
             path.append(current_point)
-            current_point = min(self.succ(current_point),
-                                key=lambda sprime:
-                                self.c(current_point, sprime) +
-                                self.g[sprime.x][sprime.y])
+            current_point = min(self.succ(current_point), key=lambda sprime: self.c(current_point, sprime) + self.g[sprime.x][sprime.y])
         path.append(self.goal)
         return path
 
     def compare_paths(self, path1: list, path2: list):
+        """
+        比较路径
+        """
         if len(path1) != len(path2):
             return False
         for node1, node2 in zip(path1, path2):
@@ -316,48 +344,53 @@ class DStarLite:
         return True
 
     def display_path(self, path: list, colour: str, alpha: float = 1.0):
+        """
+        绘制路径
+        """
         px = [(node.x + self.x_min_world) for node in path]
         py = [(node.y + self.y_min_world) for node in path]
         drawing = plt.plot(px, py, colour, alpha=alpha)
         plt.pause(pause_time)
         return drawing
 
-    def main(self, start: Node, goal: Node,
-             spoofed_ox: list, spoofed_oy: list):
-        self.spoofed_obstacles = [[Node(x - self.x_min_world,
-                                        y - self.y_min_world)
-                                   for x, y in zip(rowx, rowy)]
+    def main(self, start: Node, goal: Node, spoofed_ox: list, spoofed_oy: list):
+        """
+        算法主函数
+        """
+        #   动态障碍物
+        self.spoofed_obstacles = [[Node(x - self.x_min_world, y - self.y_min_world) for x, y in zip(rowx, rowy)]
                                   for rowx, rowy in zip(spoofed_ox, spoofed_oy)
                                   ]
-        pathx = []
-        pathy = []
+        pathx, pathy = [], []
+        #   初始化起点和终点
         self.initialize(start, goal)
         last = self.start
+        #   计算最短路径
         self.compute_shortest_path()
+
         pathx.append(self.start.x + self.x_min_world)
         pathy.append(self.start.y + self.y_min_world)
-
+        #   绘制当前路径
         if show_animation:
+            #   计算当前路径
             current_path = self.compute_current_path()
             previous_path = current_path.copy()
-            previous_path_image = self.display_path(previous_path, ".c",
-                                                    alpha=0.3)
+            previous_path_image = self.display_path(previous_path, ".c", alpha=0.3)
             current_path_image = self.display_path(current_path, ".c")
 
         while not compare_coordinates(self.goal, self.start):
             if self.g[self.start.x][self.start.y] == math.inf:
                 print("No path possible")
                 return False, pathx, pathy
-            self.start = min(self.succ(self.start),
-                             key=lambda sprime:
-                             self.c(self.start, sprime) +
-                             self.g[sprime.x][sprime.y])
+            self.start = min(self.succ(self.start), key=lambda sprime: self.c(self.start, sprime) + self.g[sprime.x][sprime.y])
             pathx.append(self.start.x + self.x_min_world)
             pathy.append(self.start.y + self.y_min_world)
+
             if show_animation:
                 current_path.pop(0)
                 plt.plot(pathx, pathy, "-r")
                 plt.pause(pause_time)
+
             changed_vertices = self.detect_changes()
             if len(changed_vertices) != 0:
                 print("New obstacle detected")
@@ -371,6 +404,7 @@ class DStarLite:
                     self.update_vertex(u)
                 self.compute_shortest_path()
 
+                #   绘制当前路径
                 if show_animation:
                     new_path = self.compute_current_path()
                     if not self.compare_paths(current_path, new_path):
@@ -378,18 +412,14 @@ class DStarLite:
                         previous_path_image[0].remove()
                         previous_path = current_path.copy()
                         current_path = new_path.copy()
-                        previous_path_image = self.display_path(previous_path,
-                                                                ".c",
-                                                                alpha=0.3)
-                        current_path_image = self.display_path(current_path,
-                                                               ".c")
+                        previous_path_image = self.display_path(previous_path, ".c", alpha=0.3)
+                        current_path_image = self.display_path(current_path, ".c")
                         plt.pause(pause_time)
         print("Path found")
         return True, pathx, pathy
 
 
 def main():
-
     # start and goal position
     sx, sy = 10, 10  # [m]
     gx, gy = 50, 50  # [m]
@@ -421,6 +451,7 @@ def main():
             ox.append(30)
             oy.append(i)
 
+    #   绘制网格图(包括障碍物、起点、终点)
     if show_animation:
         plt.plot(ox, oy, ".k")
         plt.plot(sx, sy, "og")
@@ -437,8 +468,7 @@ def main():
                                                  ['.', 'c', 1],
                                                  ['.', 'c', 0.3],
                                                  ['.', 'k', 1]]]
-        plt.legend(columns, label_column, bbox_to_anchor=(1, 1), title="Key:",
-                   fontsize="xx-small")
+        plt.legend(columns, label_column, bbox_to_anchor=(1, 1), title="Key:", fontsize="xx-small")
         plt.plot()
         plt.pause(pause_time)
 
@@ -455,15 +485,15 @@ def main():
     # spoofed_oy = [[], [], [], [], [], [], [], [i for i in range(10, 21)]]
 
     # Obstacles that demostrate large rerouting
-    spoofed_ox = [[], [], [],
-                  [i for i in range(0, 21)] + [0 for _ in range(0, 20)]]
-    spoofed_oy = [[], [], [],
-                  [20 for _ in range(0, 21)] + [i for i in range(0, 20)]]
+
+    #   添加随机障碍物
+    # spoofed_ox = [[i for i in range(0, 21)] + [0 for _ in range(0, 20)]]
+    # spoofed_oy = [[20 for _ in range(0, 21)] + [i for i in range(0, 20)]]
+    spoofed_ox = [[i for i in range(30, 41)]]
+    spoofed_oy = [[0 for _ in range(0, 10)]]
 
     dstarlite = DStarLite(ox, oy)
-    dstarlite.main(Node(x=sx, y=sy), Node(x=gx, y=gy),
-                   spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
-
+    dstarlite.main(Node(x=sx, y=sy), Node(x=gx, y=gy), spoofed_ox=spoofed_ox, spoofed_oy=spoofed_oy)
 
 if __name__ == "__main__":
     main()
